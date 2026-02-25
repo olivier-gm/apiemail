@@ -1,12 +1,14 @@
 import 'dotenv/config';
 import express from 'express';
 import morgan from 'morgan';
+import cors from 'cors';
 import apiRoutes from './routes/apiroutes.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Middlewares
+app.use(cors()); // Permite peticiones cross-origin desde el navegador
 app.use(morgan('dev'));
 app.use(express.json());
 
