@@ -1,20 +1,9 @@
 import 'dotenv/config';
-import nodemailer from 'nodemailer';
 
-// Creamos un único transportador para Resend usando variables de entorno
-const port = parseInt(process.env.SMTP_PORT) || 465;
+// Enviamos emails usando la API HTTP de Resend (no SMTP)
+// Esto evita el bloqueo de puertos SMTP en plataformas como Render
 
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.resend.com',
-    port: port,
-    secure: port === 465, // true para 465, false para otros (ej: 587, 2525)
-    auth: {
-        user: 'resend',
-        pass: process.env.RESEND_API_KEY
-    }
-});
-
-// Mantenemos el objeto rotatingTransporter para no romper el controlador (pero con lógica simplificada)
+// Mantenemos el objeto rotatingTransporter para no romper el controlador
 const rotatingTransporter = {
     getStats: () => {
         return {
@@ -32,27 +21,42 @@ const rotatingTransporter = {
     }
 };
 
-// Función principal que mantiene la interfaz original
+// Función principal que usa la API HTTP de Resend
 const nodemailerService = async (mensaje) => {
-    try {
-        // Aseguramos que el mensaje tenga un remitente si no se especifica
-        const finalMailOptions = {
-            from: process.env.EMAIL_FROM,
-            ...mensaje
-        };
+    const apiKey = process.env.RESEND_API_KEY;
 
-        console.log(`📤 Enviando correo a: ${finalMailOptions.to}...`);
-        const info = await transporter.sendMail(finalMailOptions);
-        console.log(`✅ Correo enviado. MessageId: ${info.messageId}`);
-
-        return info;
-    } catch (error) {
-        console.error('❌ Error al enviar correo:', error.message);
-        throw error;
+    if (!apiKey) {
+        throw new Error('RESEND_API_KEY no está definida en las variables de entorno');
     }
+
+    const payload = {
+        from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
+        to: Array.isArray(mensaje.to) ? mensaje.to : [mensaje.to],
+        subject: mensaje.subject,
+        html: mensaje.html,
+    };
+
+    console.log(`📤 Enviando correo a: ${payload.to.join(', ')}...`);
+
+    const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        console.error('❌ Error de Resend API:', data);
+        throw new Error(data.message || `Error HTTP ${response.status}`);
+    }
+
+    console.log(`✅ Correo enviado. ID: ${data.id}`);
+    return data;
 };
 
 export default nodemailerService;
-export {
-    rotatingTransporter
-};
+export { rotatingTransporter };
