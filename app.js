@@ -11,6 +11,7 @@ const port = process.env.PORT || 3000;
 app.use(cors()); // Permite peticiones cross-origin desde el navegador
 app.use(morgan('dev'));
 app.use(express.json());
+app.use(express.static('public'));
 
 // Rutas
 app.use('/api', apiRoutes);

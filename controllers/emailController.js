@@ -25,41 +25,52 @@ export const sendEmail = async (req, res) => {
         });
     }
 
-    const ticketsList = tickets.join(', ');
-    const ticketsCount = tickets.length;
+    const ticketsHtml = tickets
+        .map(t => (t === 1000000 ? '000000' : String(t).padStart(6, '0')))
+        .map(ticket => `
+            <div style="
+                background-color: #28a745;
+                color: white;
+                padding: 10px 0;
+                margin: 5px 1%;
+                border-radius: 8px;
+                display: inline-block;
+                width: 22%;
+                min-width: 80px;
+                text-align: center;
+                font-weight: bold;
+                font-size: 14px;
+                font-family: 'Courier New', monospace;
+            ">
+                ${ticket}
+            </div>
+        `).join('');
 
     const mensaje = {
         to: email,
         subject: `🎟️ Confirmación de tus tickets de rifa - ${nombre}`,
         html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h2 style="color: #2c3e50;">¡Gracias por participar, ${nombre}!</h2>
-                <p style="color: #555;">Hemos recibido tu compra correctamente. Aquí está el resumen de tus tickets:</p>
+            <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; text-align: center;">
+                <!-- Flyer Image -->
+                <img src="https://www.rifas4k.vip/static/img/partida.jpg" alt="Flyer de la Rifa" style="width: 100%; max-width: 400px; border-radius: 15px; margin-bottom: 20px;">
                 
-                <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-                    <tr style="background-color: #f2f2f2;">
-                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Nombre</strong></td>
-                        <td style="padding: 10px; border: 1px solid #ddd;">${nombre}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Cédula</strong></td>
-                        <td style="padding: 10px; border: 1px solid #ddd;">${cedula}</td>
-                    </tr>
-                    <tr style="background-color: #f2f2f2;">
-                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Correo</strong></td>
-                        <td style="padding: 10px; border: 1px solid #ddd;">${email}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Total de tickets</strong></td>
-                        <td style="padding: 10px; border: 1px solid #ddd;">${ticketsCount}</td>
-                    </tr>
-                    <tr style="background-color: #f2f2f2;">
-                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Números asignados</strong></td>
-                        <td style="padding: 10px; border: 1px solid #ddd;">${ticketsList}</td>
-                    </tr>
-                </table>
+                <!-- Thank You Message -->
+                <h1 style="color: #007bff; font-size: 28px; font-weight: bold; margin-bottom: 10px;">
+                    ¡Gracias por participar en Rifas 4K, ${nombre} !
+                </h1>
+                
+                <p style="color: #555; font-size: 18px; margin-top: 30px; margin-bottom: 20px;">
+                    Estos son los tickets que compraste:
+                </p>
 
-                <p style="color: #888; font-size: 12px;">Guarda este correo como comprobante de tu participación. ¡Buena suerte! 🍀</p>
+                <!-- Tickets Grid -->
+                <div style="text-align: center; padding: 10px; max-width: 500px; margin: 0 auto;">
+                    ${ticketsHtml}
+                </div>
+
+                <p style="color: #888; font-size: 12px; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
+                    Guarda este correo como comprobante de tu participación. ¡Buena suerte! 🍀
+                </p>
             </div>
         `
     };
@@ -87,6 +98,7 @@ export const sendEmail = async (req, res) => {
 };
 
 export const getStats = (req, res) => {
+
     const stats = rotatingTransporter.getStats();
     res.json({
         success: true,

@@ -3,7 +3,7 @@
 // Ejecutar con: node test-endpoint.js
 
 const payload = {
-    email: 'olimorovane07@gmail.com',
+    email: 'julianrafael1604@gmail.com',
     cedula: '30336715',
     nombre: 'Julian Amer',
     tickets: Array.from({
